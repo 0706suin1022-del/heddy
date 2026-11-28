@@ -693,7 +693,9 @@ input.ginp,textarea.ginp{border:0;outline:0;background:transparent;width:100%;fo
     if (c.ov === 'left') { const mt = el.querySelector('.mt'); if (mt) mt.style.height = h + 'px'; }
     const ct = el.querySelector('.ct'), sc = el.querySelector('.sc');
     let ctShift = 0;
-    if (c.hub) { // 허브 화면: 스크롤 없이 문구·캐릭터를 헤더와 하단 영역 사이 가운데에 고정
+    const kbHub = c.hub && kbOpen && c.kb && c.kb.pairs.length; // 키패드가 올라온 허브: 크기는 그대로, 위치만 옮김
+    if (kbHub) { el.classList.add('noscroll'); ct.style.height = h + 'px'; ct.style.transform = ''; c._hubK = 1; }
+    else if (c.hub) { // 허브 화면: 스크롤 없이 문구·캐릭터를 헤더와 하단 영역 사이 가운데에 고정
       el.classList.add('noscroll');
       ct.style.height = h + 'px';
       const top = c.hb + 10, bottom = h - c.rs - 10, gh = c.hub.mb - c.hub.mt;
@@ -727,7 +729,11 @@ input.ginp,textarea.ginp{border:0;outline:0;background:transparent;width:100%;fo
       const groupTop = Math.min(bar.top, ...attached.map(c2 => c2.top));
       // 나머지(문구·캐릭터)는 고정된 헤더와 채팅바 사이 가운데에
       const rest = cl.filter(c2 => c2 !== bar && !attached.includes(c2));
-      const topLimit = c.hb + 12 + kbPan, botLimit = groupTop - 12;
+      const restCl = cl.filter(c2 => c2 !== bar && !attached.includes(c2));
+      const rx0 = Math.min(...restCl.map(c2 => c2.x)), rx1 = Math.max(...restCl.map(c2 => c2.r));
+      // 채팅바 옆에 붙은 + 버튼처럼 문구·캐릭터와 가로로 겹치지 않는 것은 아래 한계로 치지 않음
+      const blockTop = Math.min(bar.top, ...attached.filter(c2 => !(c2.r < rx0 || c2.x > rx1)).map(c2 => c2.top));
+      const topLimit = c.hb + 12 + kbPan, botLimit = (restCl.length ? blockTop : groupTop) - 12;
       if (rest.length) {
         const y0 = rest[0].y, y1 = Math.max(...rest.map(c2 => c2.b));
         let gh = y1 - y0, scaleGap = 1;
